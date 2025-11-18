@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { trpc } from "@/lib/trpc/client";
 import Link from "next/link";
+import { isAtLeast18 } from "@/lib/validators";
 
 type SignupFormData = {
   email: string;
@@ -19,25 +20,6 @@ type SignupFormData = {
   city: string;
   state: string;
   zipCode: string;
-};
-
-const isAtLeast18 = (dateString: string) => {
-  const dob = new Date(dateString);
-  if (Number.isNaN(dob.getTime())) {
-    return false;
-  }
-
-  const today = new Date();
-  let age = today.getFullYear() - dob.getFullYear();
-  const hasHadBirthdayThisYear =
-    today.getMonth() > dob.getMonth() ||
-    (today.getMonth() === dob.getMonth() && today.getDate() >= dob.getDate());
-
-  if (!hasHadBirthdayThisYear) {
-    age -= 1;
-  }
-
-  return age >= 18;
 };
 
 export default function SignupPage() {
