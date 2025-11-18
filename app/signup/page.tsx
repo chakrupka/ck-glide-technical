@@ -138,6 +138,15 @@ export default function SignupPage() {
                       },
                       hasNumber: (value) =>
                         /\d/.test(value) || "Password must contain a number",
+                      hasUppercase: (value) =>
+                        /[A-Z]/.test(value) ||
+                        "Password must contain an uppercase letter",
+                      hasLowercase: (value) =>
+                        /[a-z]/.test(value) ||
+                        "Password must contain a lowercase letter",
+                      hasSpecialChar: (value) =>
+                        /[^A-Za-z0-9]/.test(value) ||
+                        "Password must contain a special character",
                     },
                   })}
                   type="password"
