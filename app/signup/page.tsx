@@ -37,6 +37,12 @@ export default function SignupPage() {
   const signupMutation = trpc.auth.signup.useMutation();
 
   const password = watch("password");
+  const emailValue = watch("email") || "";
+
+  const emailLowercaseInfo =
+    emailValue && emailValue !== emailValue.toLowerCase()
+      ? "Email addresses are normalized to lowercase when you sign up."
+      : "";
 
   const nextStep = async () => {
     let fieldsToValidate: (keyof SignupFormData)[] = [];
@@ -96,17 +102,32 @@ export default function SignupPage() {
                   {...register("email", {
                     required: "Email is required",
                     pattern: {
-                      value: /^\S+@\S+$/i,
+                      value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
                       message: "Invalid email address",
+                    },
+                    validate: {
+                      notConTypo: (value) => {
+                        const normalized = value.trim().toLowerCase();
+                        return (
+                          !normalized.endsWith(".con") ||
+                          "Domain seems mistyped (.con). Did you mean .com?"
+                        );
+                      },
                     },
                   })}
                   type="email"
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
                 />
-                {errors.email && (
+                {errors.email ? (
                   <p className="mt-1 text-sm text-red-600">
                     {errors.email.message}
                   </p>
+                ) : (
+                  emailLowercaseInfo && (
+                    <p className="mt-1 text-sm text-gray-500">
+                      {emailLowercaseInfo}
+                    </p>
+                  )
                 )}
               </div>
 
