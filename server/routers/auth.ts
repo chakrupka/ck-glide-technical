@@ -164,17 +164,21 @@ export const authRouter = router({
   logout: publicProcedure.mutation(async ({ ctx }) => {
     if (ctx.user) {
       // Delete session from database
-      let token: string | undefined;
-      if ("cookies" in ctx.req) {
-        token = (ctx.req as any).cookies.session;
-      } else {
-        const cookieHeader =
-          ctx.req.headers.get?.("cookie") || (ctx.req.headers as any).cookie;
-        token = cookieHeader
-          ?.split("; ")
-          .find((c: string) => c.startsWith("session="))
+      const headerCookies =
+        ctx.req.headers.get?.("cookie") ||
+        (ctx.req.headers as any)?.cookie ||
+        "";
+
+      const cookieFromReq =
+        "cookies" in ctx.req ? (ctx.req as any).cookies?.session : undefined;
+
+      const token =
+        cookieFromReq ??
+        headerCookies
+          .split("; ")
+          .find((c) => c.startsWith("session="))
           ?.split("=")[1];
-      }
+
       if (token) {
         await db.delete(sessions).where(eq(sessions.token, token));
       }
