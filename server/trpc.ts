@@ -6,7 +6,9 @@ import { db } from "@/lib/db";
 import { sessions, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
-export async function createContext(opts: CreateNextContextOptions | FetchCreateContextFnOptions) {
+export async function createContext(
+  opts: CreateNextContextOptions | FetchCreateContextFnOptions,
+) {
   // Handle different adapter types
   let req: any;
   let res: any;
@@ -41,25 +43,38 @@ export async function createContext(opts: CreateNextContextOptions | FetchCreate
       .map((c: string) => {
         const [key, ...val] = c.split("=");
         return [key, val.join("=")];
-      })
+      }),
   );
   token = cookiesObj.session;
 
   let user = null;
   if (token) {
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || "temporary-secret-for-interview") as {
+      const decoded = jwt.verify(
+        token,
+        process.env.JWT_SECRET || "temporary-secret-for-interview",
+      ) as {
         userId: number;
       };
 
-      const session = await db.select().from(sessions).where(eq(sessions.token, token)).get();
+      const session = await db
+        .select()
+        .from(sessions)
+        .where(eq(sessions.token, token))
+        .get();
 
-      if (session && new Date(session.expiresAt) > new Date()) {
-        user = await db.select().from(users).where(eq(users.id, decoded.userId)).get();
-        const expiresIn = new Date(session.expiresAt).getTime() - new Date().getTime();
-        if (expiresIn < 60000) {
-          console.warn("Session about to expire");
+      if (session) {
+        const expiresAt = new Date(session.expiresAt).getTime();
+        const now = Date.now();
+        const bufferMs = 5 * 60 * 1000;
+        if (expiresAt - bufferMs <= now) {
+          throw new Error("Session expired");
         }
+        user = await db
+          .select()
+          .from(users)
+          .where(eq(users.id, decoded.userId))
+          .get();
       }
     } catch (error) {
       // Invalid token
