@@ -84,7 +84,7 @@ export function FundingModal({
                 {...register("amount", {
                   required: "Amount is required",
                   pattern: {
-                    value: /^\d+\.?\d{0,2}$/,
+                    value: /^(?!0\d)\d+(\.\d{1,2})?$/,
                     message: "Invalid amount format",
                   },
                   min: {
