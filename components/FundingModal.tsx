@@ -33,6 +33,7 @@ export function FundingModal({
     defaultValues: {
       fundingType: "card",
     },
+    shouldUnregister: true,
   });
 
   const fundingType = watch("fundingType");
@@ -176,10 +177,17 @@ export function FundingModal({
               </label>
               <input
                 {...register("routingNumber", {
-                  required: "Routing number is required",
-                  pattern: {
-                    value: /^\d{9}$/,
-                    message: "Routing number must be 9 digits",
+                  validate: (value) => {
+                    if (fundingType !== "bank") {
+                      return true;
+                    }
+                    if (!value?.trim()) {
+                      return "Routing number is required";
+                    }
+                    return (
+                      /^\d{9}$/.test(value.trim()) ||
+                      "Routing number must be 9 digits"
+                    );
                   },
                 })}
                 type="text"
