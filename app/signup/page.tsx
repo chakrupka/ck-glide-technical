@@ -69,7 +69,13 @@ export default function SignupPage() {
   const onSubmit = async (data: SignupFormData) => {
     try {
       setError("");
-      await signupMutation.mutateAsync(data);
+      const normalizedPhone = data.phoneNumber.startsWith("+")
+        ? data.phoneNumber
+        : `+${data.phoneNumber}`;
+      await signupMutation.mutateAsync({
+        ...data,
+        phoneNumber: normalizedPhone,
+      });
       router.push("/dashboard");
     } catch (err: any) {
       setError(err.message || "Something went wrong");
@@ -256,18 +262,18 @@ export default function SignupPage() {
                   htmlFor="phoneNumber"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  Phone Number
+                  Phone Number (With Country Code)
                 </label>
                 <input
                   {...register("phoneNumber", {
                     required: "Phone number is required",
                     pattern: {
-                      value: /^\d{10}$/,
-                      message: "Phone number must be 10 digits",
+                      value: /^\+?[1-9]\d{1,14}$/,
+                      message: "Enter a valid phone number with country code",
                     },
                   })}
                   type="tel"
-                  placeholder="1234567890"
+                  placeholder="+11234567890"
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
                 />
                 {errors.phoneNumber && (
