@@ -16,14 +16,19 @@ export const accountRouter = router({
     .input(
       z.object({
         accountType: z.enum(["checking", "savings"]),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       // Check if user already has an account of this type
       const existingAccount = await db
         .select()
         .from(accounts)
-        .where(and(eq(accounts.userId, ctx.user.id), eq(accounts.accountType, input.accountType)))
+        .where(
+          and(
+            eq(accounts.userId, ctx.user.id),
+            eq(accounts.accountType, input.accountType),
+          ),
+        )
         .get();
 
       if (existingAccount) {
@@ -39,7 +44,11 @@ export const accountRouter = router({
       // Generate unique account number
       while (!isUnique) {
         accountNumber = generateAccountNumber();
-        const existing = await db.select().from(accounts).where(eq(accounts.accountNumber, accountNumber)).get();
+        const existing = await db
+          .select()
+          .from(accounts)
+          .where(eq(accounts.accountNumber, accountNumber))
+          .get();
         isUnique = !existing;
       }
 
@@ -52,23 +61,27 @@ export const accountRouter = router({
       });
 
       // Fetch the created account
-      const account = await db.select().from(accounts).where(eq(accounts.accountNumber, accountNumber!)).get();
+      const account = await db
+        .select()
+        .from(accounts)
+        .where(eq(accounts.accountNumber, accountNumber!))
+        .get();
 
-      return (
-        account || {
-          id: 0,
-          userId: ctx.user.id,
-          accountNumber: accountNumber!,
-          accountType: input.accountType,
-          balance: 100,
-          status: "pending",
-          createdAt: new Date().toISOString(),
-        }
-      );
+      if (!account) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to verify created account",
+        });
+      }
+
+      return account;
     }),
 
   getAccounts: protectedProcedure.query(async ({ ctx }) => {
-    const userAccounts = await db.select().from(accounts).where(eq(accounts.userId, ctx.user.id));
+    const userAccounts = await db
+      .select()
+      .from(accounts)
+      .where(eq(accounts.userId, ctx.user.id));
 
     return userAccounts;
   }),
@@ -83,7 +96,7 @@ export const accountRouter = router({
           accountNumber: z.string(),
           routingNumber: z.string().optional(),
         }),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       const amount = parseFloat(input.amount.toString());
@@ -92,7 +105,12 @@ export const accountRouter = router({
       const account = await db
         .select()
         .from(accounts)
-        .where(and(eq(accounts.id, input.accountId), eq(accounts.userId, ctx.user.id)))
+        .where(
+          and(
+            eq(accounts.id, input.accountId),
+            eq(accounts.userId, ctx.user.id),
+          ),
+        )
         .get();
 
       if (!account) {
@@ -120,7 +138,12 @@ export const accountRouter = router({
       });
 
       // Fetch the created transaction
-      const transaction = await db.select().from(transactions).orderBy(transactions.createdAt).limit(1).get();
+      const transaction = await db
+        .select()
+        .from(transactions)
+        .orderBy(transactions.createdAt)
+        .limit(1)
+        .get();
 
       // Update account balance
       await db
@@ -145,14 +168,19 @@ export const accountRouter = router({
     .input(
       z.object({
         accountId: z.number(),
-      })
+      }),
     )
     .query(async ({ input, ctx }) => {
       // Verify account belongs to user
       const account = await db
         .select()
         .from(accounts)
-        .where(and(eq(accounts.id, input.accountId), eq(accounts.userId, ctx.user.id)))
+        .where(
+          and(
+            eq(accounts.id, input.accountId),
+            eq(accounts.userId, ctx.user.id),
+          ),
+        )
         .get();
 
       if (!account) {
@@ -169,7 +197,11 @@ export const accountRouter = router({
 
       const enrichedTransactions = [];
       for (const transaction of accountTransactions) {
-        const accountDetails = await db.select().from(accounts).where(eq(accounts.id, transaction.accountId)).get();
+        const accountDetails = await db
+          .select()
+          .from(accounts)
+          .where(eq(accounts.id, transaction.accountId))
+          .get();
 
         enrichedTransactions.push({
           ...transaction,
