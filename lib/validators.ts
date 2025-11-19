@@ -8,7 +8,7 @@ export const isAtLeast18 = (dateString: string): boolean => {
   let age = today.getFullYear() - dob.getFullYear();
   const hasHadBirthdayThisYear =
     today.getMonth() > dob.getMonth() ||
-    (today.getMonth() === dob.getMonth() && today.getDate() >= dob.getDate());
+    (today.getMonth() === dob.getMonth() && today.getDate() > dob.getDate());
 
   if (!hasHadBirthdayThisYear) {
     age -= 1;
@@ -49,4 +49,3 @@ export const isValidCardNumber = (value: string): boolean => {
 
   return sum % 10 === 0;
 };
-
