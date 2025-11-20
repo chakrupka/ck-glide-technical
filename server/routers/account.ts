@@ -141,7 +141,7 @@ export const accountRouter = router({
         .select()
         .from(transactions)
         .where(eq(transactions.accountId, input.accountId))
-        .orderBy(desc(transactions.createdAt))
+        .orderBy(desc(transactions.createdAt), desc(transactions.id))
         .limit(1)
         .get();
 
@@ -201,6 +201,6 @@ export const accountRouter = router({
         .from(transactions)
         .innerJoin(accounts, eq(accounts.id, transactions.accountId))
         .where(eq(transactions.accountId, input.accountId))
-        .orderBy(desc(transactions.createdAt));
+        .orderBy(desc(transactions.createdAt), desc(transactions.id));
     }),
 });
